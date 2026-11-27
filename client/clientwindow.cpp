@@ -93,7 +93,7 @@ void ClientWindow::onTick()
 
 void ClientWindow::onReadyRead()
 {
-    while (!m_socket->hasPendingDatagrams()){
+    while (m_socket->hasPendingDatagrams()){
         QByteArray data;
         data.resize(static_cast<int>(m_socket->pendingDatagramSize()));
         m_socket->readDatagram(data.data(), data.size());

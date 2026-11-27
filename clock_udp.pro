@@ -3,7 +3,8 @@ TEMPLATE = subdirs
 SUBDIRS = \
     common \
     server \
-    client
+    client \
+    profiles
 
 server.depends = common
 client.depends = common
