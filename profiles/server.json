@@ -1,0 +1,8 @@
+{
+    "server": {
+        "listenPort": 45454,
+        "sendIntervalMs": 1000,
+        "clientTimeoutMs": 3000,
+        "initialTime": "12:00"
+    }
+}

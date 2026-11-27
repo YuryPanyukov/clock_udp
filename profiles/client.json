@@ -1,0 +1,9 @@
+{
+    "client": {
+        "serverHost": "127.0.0.1",
+        "serverPort": 45454,
+        "localPort": 45455,
+        "presenceIntervalMs": 1000,
+        "serverTimeoutMs": 3000
+    }
+}
