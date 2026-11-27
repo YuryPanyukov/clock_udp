@@ -1,6 +1,0 @@
-QMAKE_PRL_BUILD_DIR = D:/GitHUB_Qt/clock_udp/build/Desktop_Qt_6_12_1_MinGW_64_bit/common
-QMAKE_PRO_INPUT = common.pro
-QMAKE_PRL_TARGET = libcommon.a
-QMAKE_PRL_CONFIG = lex yacc debug exceptions depend_includepath testcase_targets import_qpa_plugin windows file_copies qmake_use qt warn_on link_prl debug_and_release debug_and_release_target precompile_header plugin_manifest intelcet trivial_auto_var_init_pattern stack_protector stack_clash_protection libstdcpp_assertions win32 mingw gcc copy_dir_files debug DebugBuild Debug build_pass entrypoint debug qml_debug debug DebugBuild Debug build_pass staticlib c++17 create_prl debug DebugBuild Debug build_pass have_target static staticlib no_plist exclusive_builds debug_info c++1z no_autoqmake thread moc resources
-QMAKE_PRL_LIBS = C:/Qt/6.12.1/mingw_64/lib/libQt6Core.a
-QMAKE_PRL_LIBS_FOR_CMAKE = C:/Qt/6.12.1/mingw_64/lib/libQt6Core.a;;;
