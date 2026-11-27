@@ -1,0 +1,42 @@
+# Qt build artifacts
+build/
+build-*/
+debug/
+release/
+*.debug
+*.release
+
+# qmake / make
+Makefile
+Makefile.*
+.qmake.stash
+*.pro.user
+*.pro.user.*
+
+# Compiled objects and binaries
+*.o
+*.obj
+*.a
+*.lib
+*.exe
+*.dll
+*.so
+*.so.*
+*.dylib
+*.pdb
+*.ilk
+*.exp
+
+# CMake (если когда-нибудь пригодится)
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+
+# IDE
+.vscode/
+.idea/
+*.autosave
+
+# OS
+.DS_Store
+Thumbs.db
