@@ -1,15 +1,31 @@
-QT += widgets network
+QT += core widgets network
 
 CONFIG += c++17
+TARGET = ClockClient
+TEMPLATE = app
 
-# You can make your code fail to compile if it uses deprecated APIs.
-# In order to do so, uncomment the following line.
-#DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+INCLUDEPATH += $$PWD/../common
+DEPENDPATH  += $$PWD/../common
+
+# --- линковка common ---
+win32:CONFIG(release, debug|release): \
+    LIBS += -L$$OUT_PWD/../common/release/ -lcommon
+else:win32:CONFIG(debug, debug|release): \
+    LIBS += -L$$OUT_PWD/../common/debug/ -lcommon
+else:unix: \
+    LIBS += -L$$OUT_PWD/../common/ -lcommon
+
+win32:CONFIG(release, debug|release): \
+    PRE_TARGETDEPS += $$OUT_PWD/../common/release/$${QMAKE_PREFIX_STATICLIB}common.$${QMAKE_EXTENSION_STATICLIB}
+else:win32:CONFIG(debug, debug|release): \
+    PRE_TARGETDEPS += $$OUT_PWD/../common/debug/$${QMAKE_PREFIX_STATICLIB}common.$${QMAKE_EXTENSION_STATICLIB}
+else:unix: \
+    PRE_TARGETDEPS += $$OUT_PWD/../common/$${QMAKE_PREFIX_STATICLIB}common.$${QMAKE_EXTENSION_STATICLIB}
 
 SOURCES += \
-    clockface.cpp \
     main.cpp \
-    clientwindow.cpp
+    clientwindow.cpp \
+    clockface.cpp
 
 HEADERS += \
     clientwindow.h \
@@ -17,8 +33,3 @@ HEADERS += \
 
 FORMS += \
     clientwindow.ui
-
-# Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target

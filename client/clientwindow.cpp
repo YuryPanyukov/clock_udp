@@ -1,6 +1,8 @@
 #include "clientwindow.h"
 #include "ui_clientwindow.h"
 #include "clockface.h"
+#include "protocol.h"
+#include "settings.h"
 
 #include <QButtonGroup>
 #include <QPushButton>
@@ -11,12 +13,18 @@
 #include <QTime>
 #include <QTimer>
 
+#include <QJsonObject>
+
 namespace{
-constexpr quint16 kServerPort = 45454;
-constexpr int kTimeoutMs = 3000;
-constexpr int kTickMs = 1000;
-const char *const kServerHost = "127.0.0.1";
-const QByteArray kPresencePacket = "PRESENCS\n";
+
+const QJsonObject kClientDefaults = {
+    {"serverHost", "127.0.0.1"},
+    {"serverPort", protocol::kDefaultServerPort},
+    {"presenceIntervalMs", protocol::kTickMs},
+    {"serverTimeoutMs", protocol::kTimeoutMs}
+
+};
+
 }
 
 
@@ -25,6 +33,17 @@ ClientWindow::ClientWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    // Вначале загружаем профиль
+    const QJsonObject profile = settings::loadProfile("client.json", kClientDefaults);
+    m_serverHost = profile.value("serverHost").toString("127.0.0.1");
+    m_serverPort = static_cast<quint16>(profile.value("serverPort").toInt(protocol::kDefaultServerPort));
+    m_presenceInterval = profile.value("presenceIntervalMs").toInt(protocol::kTickMs);
+    m_serverTimeoutMs = profile.value("serverTimeoutMs").toInt(protocol::kTimeoutMs);
+
+    if (m_presenceInterval <= 0) m_presenceInterval = protocol::kTickMs;
+    if (m_serverTimeoutMs <= 0) m_serverTimeoutMs  = protocol::kTimeoutMs;
+
+    // Добавляем кнопки
     auto *group = new QButtonGroup(this);
     group->setExclusive(true);
     group->addButton(ui->btnYes);
@@ -48,7 +67,7 @@ ClientWindow::ClientWindow(QWidget *parent)
 
     // Таймер
     m_timer = new QTimer(this);
-    m_timer->setInterval(kTickMs);
+    m_timer->setInterval(m_presenceInterval);
     m_timer->setTimerType(Qt::PreciseTimer);
     connect(m_timer, &QTimer::timeout, this, &ClientWindow::onTick);
     m_timer->start();
@@ -64,10 +83,10 @@ ClientWindow::~ClientWindow()
 void ClientWindow::onTick()
 {
     // Уведомляем сервер о присутствии
-    m_socket->writeDatagram(kPresencePacket, QHostAddress(QString::fromLatin1(kServerHost)), kServerPort);
+    m_socket->writeDatagram(protocol::presencePacket(), QHostAddress(m_serverHost), m_serverPort);
 
     // Обновляем поле актуальности
-    bool actual = m_lastServerPacket.isValid() && m_lastServerPacket.elapsed() <= kTimeoutMs;
+    bool actual = m_lastServerPacket.isValid() && m_lastServerPacket.elapsed() <= m_serverTimeoutMs;
 
     setActual(actual);
 }

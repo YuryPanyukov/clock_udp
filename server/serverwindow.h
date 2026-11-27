@@ -22,9 +22,9 @@ public:
     ~ServerWindow() override;
 
 private slots:
-    void onTick();                    // 1 Гц
-    void onReadyRead();               // приём PRESENCE
-    void onTimeEdited(const QTime &); // пользователь изменил поле
+    void onTick();
+    void onReadyRead();
+    void onTimeEdited(const QTime &);
 
 private:
     void updateTimeEditProgrammatic();
@@ -32,16 +32,18 @@ private:
     void setClientSeen(bool seen);
 
     Ui::ServerWindow *ui;
-    QUdpSocket  *m_socket    = nullptr;
-    QTimer      *m_timer     = nullptr;
+    QUdpSocket *m_socket = nullptr;
+    QTimer *m_timer = nullptr;
 
-    QTime        m_time{12, 0};
+    QTime m_time{12, 0};
     QHostAddress m_clientAddress;
-    quint16      m_clientPort = 0;
-    bool         m_hasClient  = false;
-    bool         m_programmaticUpdate = false;   // guard для QTimeEdit
+    quint16 m_clientPort = 0;
+    bool m_hasClient  = false;
+    bool m_programmaticUpdate = false;
 
     QElapsedTimer m_lastPresence;
+
+    int m_clientTimeoutMs = 3000;
 };
 
 #endif // SERVERWINDOW_H

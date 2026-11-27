@@ -1,19 +1,45 @@
 #include "serverwindow.h"
 #include "ui_serverwindow.h"
 #include "protocol.h"
+#include "settings.h"
 
 #include <QButtonGroup>
+#include <QJsonObject>
 #include <QPushButton>
 #include <QTimeEdit>
 #include <QTimer>
 #include <QUdpSocket>
+
+namespace {
+
+const QJsonObject kServerDefaults = {
+    { "listenPort",      protocol::kDefaultServerPort },
+    { "sendIntervalMs",  protocol::kTickMs },
+    { "clientTimeoutMs", protocol::kTimeoutMs },
+    { "initialTime",     "12:00" },
+    };
+
+}
 
 ServerWindow::ServerWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::ServerWindow)
 {
     ui->setupUi(this);
 
-    // --- индикатор «Клиент видит время: Да/Нет» ---
+    // Вначале загружаем профиль
+    const QJsonObject profile = settings::loadProfile("server.json", kServerDefaults);
+    const quint16 listenPort = static_cast<quint16>(profile.value("listenPort").toInt(protocol::kDefaultServerPort));
+    const int sendIntervalMs = profile.value("sendIntervalMs").toInt(protocol::kTickMs);
+    m_clientTimeoutMs = profile.value("clientTimeoutMs").toInt(protocol::kTimeoutMs);
+    const QString initialTimeStr = profile.value("initialTime").toString("12:00");
+
+    if (sendIntervalMs <= 0) return;
+    if (m_clientTimeoutMs <= 0) m_clientTimeoutMs = protocol::kTimeoutMs;
+
+    m_time = QTime::fromString(initialTimeStr, "HH:mm");
+    if (!m_time.isValid()) m_time = QTime(12, 0);
+
+    // Добавляем кнопки
     auto *group = new QButtonGroup(this);
     group->setExclusive(true);
     group->addButton(ui->btnYes);
@@ -22,32 +48,29 @@ ServerWindow::ServerWindow(QWidget *parent)
     ui->btnYes->setAttribute(Qt::WA_TransparentForMouseEvents);
     ui->btnNo ->setAttribute(Qt::WA_TransparentForMouseEvents);
 
-    ui->btnYes->setStyleSheet(
-        "QPushButton:checked { background-color: #4CAF50; color: white; }");
-    ui->btnNo->setStyleSheet(
-        "QPushButton:checked { background-color: #f44336; color: white; }");
+    ui->btnYes->setStyleSheet("QPushButton:checked { background-color: #4CAF50; color: white; }");
+    ui->btnNo->setStyleSheet("QPushButton:checked { background-color: #f44336; color: white; }");
 
     setClientSeen(false);
 
-    // --- поле времени ---
+    // Время
     ui->timeEdit->setDisplayFormat("HH:mm");
-    updateTimeEditProgrammatic();   // выставить m_time без «пользовательского» сигнала
+    updateTimeEditProgrammatic();
     connect(ui->timeEdit, &QTimeEdit::timeChanged,
             this, &ServerWindow::onTimeEdited);
 
-    // --- UDP-сокет ---
+    // UDP сокет
     m_socket = new QUdpSocket(this);
-    if (!m_socket->bind(QHostAddress::AnyIPv4, protocol::kDefaultServerPort)) {
+    if (!m_socket->bind(QHostAddress::AnyIPv4, listenPort)) {
         qWarning("Не удалось забиндить UDP-порт %u: %s",
-                 protocol::kDefaultServerPort,
+                 static_cast<unsigned>(listenPort),
                  qPrintable(m_socket->errorString()));
     }
-    connect(m_socket, &QUdpSocket::readyRead,
-            this, &ServerWindow::onReadyRead);
+    connect(m_socket, &QUdpSocket::readyRead, this, &ServerWindow::onReadyRead);
 
-    // --- таймер 1 Гц ---
+    // Nfqvth
     m_timer = new QTimer(this);
-    m_timer->setInterval(protocol::kTickMs);
+    m_timer->setInterval(sendIntervalMs);
     m_timer->setTimerType(Qt::PreciseTimer);
     connect(m_timer, &QTimer::timeout, this, &ServerWindow::onTick);
     m_timer->start();
@@ -65,30 +88,27 @@ void ServerWindow::updateTimeEditProgrammatic()
     m_programmaticUpdate = false;
 }
 
-void ServerWindow::onTimeEdited(const QTime &t)
+void ServerWindow::onTimeEdited(const QTime &time)
 {
     if (m_programmaticUpdate)
-        return;                     // это наша же установка, не пользователь
+        return;
 
-    m_time = t;
-    sendTimeToClient();             // 2.3: сразу отправить новое время
+    m_time = time;
+    sendTimeToClient();
 }
 
 void ServerWindow::onTick()
 {
-    // 2.5: если пользователь НЕ редактирует поле — +1 минута
     if (!ui->timeEdit->hasFocus()) {
         m_time = m_time.addSecs(60);
         updateTimeEditProgrammatic();
     }
 
-    // 2.1: раз в секунду отправляем время клиенту
     sendTimeToClient();
 
-    // 2.4: «Да», если PRESENCE был не позже 3 с назад
     const bool seen = m_hasClient
                       && m_lastPresence.isValid()
-                      && m_lastPresence.elapsed() <= protocol::kTimeoutMs;
+                      && m_lastPresence.elapsed() <= m_clientTimeoutMs;
     setClientSeen(seen);
 }
 
@@ -104,11 +124,10 @@ void ServerWindow::onReadyRead()
 
         if (data.trimmed() == "PRESENCE") {
             m_clientAddress = sender;
-            m_clientPort    = senderPort;
-            m_hasClient     = true;
+            m_clientPort = senderPort;
+            m_hasClient = true;
             m_lastPresence.restart();
         }
-        // прочие датаграммы игнорируем
     }
 }
 
@@ -116,8 +135,8 @@ void ServerWindow::sendTimeToClient()
 {
     if (!m_hasClient)
         return;
-    m_socket->writeDatagram(protocol::makeTimePacket(m_time),
-                            m_clientAddress, m_clientPort);
+
+    m_socket->writeDatagram(protocol::makeTimePacket(m_time),m_clientAddress, m_clientPort);
 }
 
 void ServerWindow::setClientSeen(bool seen)
