@@ -32,9 +32,9 @@ ServerWindow::ServerWindow(QWidget *parent)
     m_clientTimeoutMs = profile.value("clientTimeoutMs").toInt(protocol::kTimeoutMs);
     const QString initialTimeStr = profile.value("initialTime").toString("12:00");
 
-    if (sendIntervalMs <= 0) return;
-    if (m_clientTimeoutMs <= 0) m_clientTimeoutMs = protocol::kTimeoutMs;
+    const int effectiveInterval = (sendIntervalMs > 0) ? sendIntervalMs : protocol::kTickMs;
 
+    if (m_clientTimeoutMs <= 0) m_clientTimeoutMs = protocol::kTimeoutMs;
     m_time = QTime::fromString(initialTimeStr, "HH:mm");
     if (!m_time.isValid()) m_time = QTime(12, 0);
 
@@ -58,7 +58,7 @@ ServerWindow::ServerWindow(QWidget *parent)
 
     // Время
     m_timer = new QTimer(this);
-    m_timer->setInterval(sendIntervalMs);
+    m_timer->setInterval(effectiveInterval);
     m_timer->setTimerType(Qt::PreciseTimer);
     connect(m_timer, &QTimer::timeout, this, &ServerWindow::onTick);
     m_timer->start();

@@ -98,7 +98,7 @@ void ClientWindow::onReadyRead()
         data.resize(static_cast<int>(m_socket->pendingDatagramSize()));
         m_socket->readDatagram(data.data(), data.size());
 
-        // Ожадаем время
+        // Ожидаем время
         const QByteArray line = data.trimmed();
         if (!line.startsWith("TIME ")){
             continue;
