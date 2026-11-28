@@ -11,3 +11,5 @@ target_link_libraries(ClockServer PRIVATE
     Qt6::Widgets
     Qt6::Network
 )
+
+qt_deploy_windows(ClockServer)
