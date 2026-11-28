@@ -27,7 +27,6 @@ public:
 private slots:
     void onTick();
     void onReadyRead();
-    void onManualReport();
 
 private:
     Ui::ClientWindow *ui;
@@ -39,8 +38,6 @@ private:
     quint16 m_serverPort = 45454;
     int m_presenceInterval = 1000;
     int m_serverTimeoutMs = 3000;
-
-    void sendPresence();
 
 };
 #endif // CLIENTWINDOW_H

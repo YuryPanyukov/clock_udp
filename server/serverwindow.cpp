@@ -3,7 +3,8 @@
 #include "protocol.h"
 #include "settings.h"
 
-#include <QLabel>
+#include <QPushButton>
+#include <QButtonGroup>
 #include <QJsonObject>
 #include <QTimeEdit>
 #include <QTimer>
@@ -32,13 +33,22 @@ ServerWindow::ServerWindow(QWidget *parent)
     m_clientTimeoutMs = profile.value("clientTimeoutMs").toInt(protocol::kTimeoutMs);
     const QString initialTimeStr = profile.value("initialTime").toString("12:00");
 
-    const int effectiveInterval = (sendIntervalMs > 0) ? sendIntervalMs : protocol::kTickMs;
-
     if (m_clientTimeoutMs <= 0) m_clientTimeoutMs = protocol::kTimeoutMs;
     m_time = QTime::fromString(initialTimeStr, "HH:mm");
     if (!m_time.isValid()) m_time = QTime(12, 0);
 
-    // Клиент видит время
+    // Индикатор
+    auto *group = new QButtonGroup(this);
+    group->setExclusive(true);
+    group->addButton(ui->btnYes);
+    group->addButton(ui->btnNo);
+
+    // Кнопки — индикатор, состояние выставляет только onTick().
+    ui->btnYes->setAttribute(Qt::WA_TransparentForMouseEvents);
+    ui->btnNo ->setAttribute(Qt::WA_TransparentForMouseEvents);
+
+    ui->btnYes->setStyleSheet("QPushButton:checked { background-color: #4CAF50; color: white; }");
+    ui->btnNo->setStyleSheet("QPushButton:checked { background-color: #f44336; color: white; }");
     setClientSeen(false);
 
     // Время
@@ -56,7 +66,8 @@ ServerWindow::ServerWindow(QWidget *parent)
     }
     connect(m_socket, &QUdpSocket::readyRead, this, &ServerWindow::onReadyRead);
 
-    // Время
+    // Таймер
+    const int effectiveInterval = (sendIntervalMs > 0) ? sendIntervalMs : protocol::kTickMs;
     m_timer = new QTimer(this);
     m_timer->setInterval(effectiveInterval);
     m_timer->setTimerType(Qt::PreciseTimer);
@@ -129,13 +140,6 @@ void ServerWindow::sendTimeToClient()
 
 void ServerWindow::setClientSeen(bool seen)
 {
-    const QString text  = seen ? QStringLiteral("Да") : QStringLiteral("нет");
-    const QString color = seen ? QStringLiteral("#4CAF50") : QStringLiteral("#9e9e9e");
-
-    if (ui->statusLabel->text() == text)
-        return;
-
-    ui->statusLabel->setText(text);
-    ui->statusLabel->setStyleSheet(QStringLiteral("color: %1;").arg(color));
-
+    ui->btnYes->setChecked(seen);
+    ui->btnNo ->setChecked(!seen);
 }

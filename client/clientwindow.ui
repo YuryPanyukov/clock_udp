@@ -27,7 +27,7 @@
       <item>
        <widget class="QLabel" name="actualLabel">
         <property name="text">
-         <string>Данные о времени актуальны</string>
+         <string>Данные о времени актуальны:</string>
         </property>
        </widget>
       </item>
