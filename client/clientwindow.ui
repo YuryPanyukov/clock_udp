@@ -23,28 +23,13 @@
      </widget>
     </item>
     <item>
-     <widget class="QLabel" name="actualLabel">
-      <property name="text">
-       <string>Данные о времени актуальны:</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="buttonsLayout">
+     <layout class="QHBoxLayout" name="statusLayout">
       <item>
-       <spacer name="leftSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+       <widget class="QLabel" name="actualLabel">
+        <property name="text">
+         <string>Данные о времени актуальны</string>
         </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width><height>20</height>
-         </size>
-        </property>
-       </spacer>
+       </widget>
       </item>
       <item>
        <widget class="QPushButton" name="btnYes">
@@ -83,7 +68,7 @@
        </widget>
       </item>
       <item>
-       <spacer name="rightSpacer">
+       <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>

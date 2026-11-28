@@ -49,8 +49,8 @@ ClientWindow::ClientWindow(QWidget *parent)
     group->addButton(ui->btnYes);
     group->addButton(ui->btnNo);
 
-    ui->btnYes->setAttribute(Qt::WA_TransparentForMouseEvents);
-    ui->btnNo->setAttribute(Qt::WA_TransparentForMouseEvents);
+    connect(ui->btnYes, &QPushButton::clicked, this, &ClientWindow::onManualReport);
+    connect(ui->btnNo, &QPushButton::clicked, this, &ClientWindow::onManualReport);
 
     ui->btnYes->setStyleSheet("QPushButton:checked { background-color: #4CAF50; color: white;}");
     ui->btnNo->setStyleSheet("QPushButton:checked { background-color: #f44336; color: white;}");
@@ -120,6 +120,16 @@ void ClientWindow::setActual(bool actual)
 {
     ui->btnYes->setChecked(actual);
     ui->btnNo->setChecked(!actual);
+}
+
+void ClientWindow::onManualReport()
+{
+    sendPresence();
+}
+
+void ClientWindow::sendPresence()
+{
+    m_socket->writeDatagram(protocol::presencePacket(), QHostAddress(m_serverHost), m_serverPort);
 }
 
 

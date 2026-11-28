@@ -3,9 +3,8 @@
 #include "protocol.h"
 #include "settings.h"
 
-#include <QButtonGroup>
+#include <QLabel>
 #include <QJsonObject>
-#include <QPushButton>
 #include <QTimeEdit>
 #include <QTimer>
 #include <QUdpSocket>
@@ -39,18 +38,7 @@ ServerWindow::ServerWindow(QWidget *parent)
     m_time = QTime::fromString(initialTimeStr, "HH:mm");
     if (!m_time.isValid()) m_time = QTime(12, 0);
 
-    // Добавляем кнопки
-    auto *group = new QButtonGroup(this);
-    group->setExclusive(true);
-    group->addButton(ui->btnYes);
-    group->addButton(ui->btnNo);
-
-    ui->btnYes->setAttribute(Qt::WA_TransparentForMouseEvents);
-    ui->btnNo ->setAttribute(Qt::WA_TransparentForMouseEvents);
-
-    ui->btnYes->setStyleSheet("QPushButton:checked { background-color: #4CAF50; color: white; }");
-    ui->btnNo->setStyleSheet("QPushButton:checked { background-color: #f44336; color: white; }");
-
+    // Клиент видит время
     setClientSeen(false);
 
     // Время
@@ -68,7 +56,7 @@ ServerWindow::ServerWindow(QWidget *parent)
     }
     connect(m_socket, &QUdpSocket::readyRead, this, &ServerWindow::onReadyRead);
 
-    // Nfqvth
+    // Время
     m_timer = new QTimer(this);
     m_timer->setInterval(sendIntervalMs);
     m_timer->setTimerType(Qt::PreciseTimer);
@@ -141,6 +129,13 @@ void ServerWindow::sendTimeToClient()
 
 void ServerWindow::setClientSeen(bool seen)
 {
-    ui->btnYes->setChecked(seen);
-    ui->btnNo ->setChecked(!seen);
+    const QString text  = seen ? QStringLiteral("Да") : QStringLiteral("нет");
+    const QString color = seen ? QStringLiteral("#4CAF50") : QStringLiteral("#9e9e9e");
+
+    if (ui->statusLabel->text() == text)
+        return;
+
+    ui->statusLabel->setText(text);
+    ui->statusLabel->setStyleSheet(QStringLiteral("color: %1;").arg(color));
+
 }
